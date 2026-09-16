@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPulse AI - Multi-Grade Smart Study Assistant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        .grade-badge-elementary { background-color: #059669; color: #ecfdf5; }
+        .grade-badge-middle { background-color: #4f46e5; color: #eep2ff; }
+        .grade-badge-high { background-color: #e11d48; color: #ffe4e6; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-800 border-b border-slate-700 px-4 md:px-6 py-3 flex justify-between items-center shadow-lg z-10">
+        <div class="flex items-center space-x-3">
+            <div id="header-logo" class="bg-gradient-to-tr from-indigo-500 to-cyan-400 p-2.5 rounded-xl text-white shadow-md transition-all duration-300">
+                <i class="fa-solid fa-brain text-2xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
+                        EduPulse AI
+                    </h1>
+                    <span id="grade-pill" class="text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500 text-slate-900 shadow">
+                        🎒 Elementary Mode
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 hidden sm:block">Adaptive AI Study Companion & Concept Mastery</p>
+            </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleSettingsModal()" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition border border-slate-600 shadow-sm">
+                <i class="fa-solid fa-key text-amber-400"></i>
+                <span class="hidden sm:inline">API Settings</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main App Body -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-80 bg-slate-800/60 backdrop-blur-md border-r border-slate-700/80 p-4 flex flex-col justify-between hidden lg:flex overflow-y-auto">
+            <div class="space-y-6">
+                
+                <!-- Grade Level Selector -->
+                <div>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400"></i> 1. Select Grade Level
+                    </h2>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="selectGrade('elementary')" id="grade-btn-elementary" class="grade-btn active text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-emerald-500/50 bg-emerald-950/40 text-emerald-300">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-base">🎒</span>
+                                <span>Elementary <span class="text-xs opacity-75">(K-5)</span></span>
+                            </span>
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </button>
+                        <button onclick="selectGrade('middle')" id="grade-btn-middle" class="grade-btn text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-slate-700 text-slate-300 hover:border-slate-600">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-base">🏫</span>
+                                <span>Middle School <span class="text-xs opacity-75">(6-8)</span></span>
+                            </span>
+                            <i class="fa-solid fa-check text-xs opacity-0"></i>
+                        </button>
+                        <button onclick="selectGrade('high')" id="grade-btn-high" class="grade-btn text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-slate-700 text-slate-300 hover:border-slate-600">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-base">🎓</span>
+                                <span>High School <span class="text-xs opacity-75">(9-12)</span></span>
+                            </span>
+                            <i class="fa-solid fa-check text-xs opacity-0"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject Selector -->
+                <div>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-book text-cyan-400"></i> 2. Select Subject
+                    </h2>
+                    <div class="space-y-1.5">
+                        <button onclick="selectSubject('math')" id="btn-math" class="subject-btn active w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition bg-indigo-600 text-white font-medium text-sm shadow-sm">
+                            <i class="fa-solid fa-calculator text-base w-5 text-center"></i>
+                            <span>Math</span>
+                        </button>
+                        <button onclick="selectSubject('reading')" id="btn-reading" class="subject-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition text-slate-300 hover:bg-slate-700/60 font-medium text-sm">
+                            <i class="fa-solid fa-book-open text-base w-5 text-center"></i>
+                            <span>Reading & Language Arts</span>
+                        </button>
+                        <button onclick="selectSubject('social')" id="btn-social" class="subject-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition text-slate-300 hover:bg-slate-700/60 font-medium text-sm">
+                            <i class="fa-solid fa-earth-americas text-base w-5 text-center"></i>
+                            <span>Social Studies & History</span>
+                        </button>
+                        <button onclick="selectSubject('science')" id="btn-science" class="subject-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition text-slate-300 hover:bg-slate-700/60 font-medium text-sm">
+                            <i class="fa-solid fa-flask text-base w-5 text-center"></i>
+                            <span>Science & Tech</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Learning Goal / Mode -->
+                <div>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullseye text-rose-400"></i> 3. Learning Goal
+                    </h2>
+                    <div class="space-y-1.5">
+                        <button onclick="setGoal('explain')" id="goal-explain" class="goal-btn w-full text-left px-3 py-2 rounded-xl text-xs border border-indigo-500/50 bg-indigo-950/40 text-indigo-300 font-medium">
+                            💡 Explain Simply
+                        </button>
+                        <button onclick="setGoal('quiz')" id="goal-quiz" class="goal-btn w-full text-left px-3 py-2 rounded-xl text-xs border border-slate-700 text-slate-400 hover:border-slate-600">
+                            📝 Practice Quiz & Practice Problems
+                        </button>
+                        <button onclick="setGoal('summary')" id="goal-summary" class="goal-btn w-full text-left px-3 py-2 rounded-xl text-xs border border-slate-700 text-slate-400 hover:border-slate-600">
+                            🗂️ Key Vocabulary & Cheat Sheet
+                        </button>
+                        <button onclick="setGoal('story')" id="goal-story" class="goal-btn w-full text-left px-3 py-2 rounded-xl text-xs border border-slate-700 text-slate-400 hover:border-slate-600">
+                            🚀 Real-World Example / Story Mode
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Context Summary Footer -->
+            <div class="mt-6 p-3 bg-slate-800 rounded-xl border border-slate-700/80 text-xs">
+                <p class="text-slate-400 mb-1">Active Tutor Persona:</p>
+                <div class="font-semibold text-slate-200 flex items-center justify-between">
+                    <span id="active-persona-text">Elementary Math Tutor</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col bg-slate-900/95 relative">
+
+            <!-- Mobile Controls Bar (Tabs for small screens) -->
+            <div class="lg:hidden bg-slate-800 border-b border-slate-700 p-2.5 space-y-2">
+                <!-- Mobile Grade Selector -->
+                <div class="flex items-center justify-between gap-1 overflow-x-auto pb-1 text-xs">
+                    <button onclick="selectGrade('elementary')" id="m-grade-elementary" class="m-grade-btn px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg font-medium whitespace-nowrap">🎒 Elementary</button>
+                    <button onclick="selectGrade('middle')" id="m-grade-middle" class="m-grade-btn px-2.5 py-1.5 bg-slate-700 text-slate-300 rounded-lg font-medium whitespace-nowrap">🏫 Middle School</button>
+                    <button onclick="selectGrade('high')" id="m-grade-high" class="m-grade-btn px-2.5 py-1.5 bg-slate-700 text-slate-300 rounded-lg font-medium whitespace-nowrap">🎓 High School</button>
+                </div>
+                <!-- Mobile Subject Selector -->
+                <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
+                    <button onclick="selectSubject('math')" id="m-btn-math" class="m-sub-btn px-2.5 py-1 bg-indigo-600 text-white rounded-md font-medium whitespace-nowrap">Math</button>
+                    <button onclick="selectSubject('reading')" id="m-btn-reading" class="m-sub-btn px-2.5 py-1 bg-slate-700 text-slate-300 rounded-md font-medium whitespace-nowrap">Reading</button>
+                    <button onclick="selectSubject('social')" id="m-btn-social" class="m-sub-btn px-2.5 py-1 bg-slate-700 text-slate-300 rounded-md font-medium whitespace-nowrap">Social Studies</button>
+                    <button onclick="selectSubject('science')" id="m-btn-science" class="m-sub-btn px-2.5 py-1 bg-slate-700 text-slate-300 rounded-md font-medium whitespace-nowrap">Science</button>
+                </div>
+            </div>
+
+            <!-- Chat Scroll Area -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 chat-scroll">
+                
+                <!-- Welcome Banner Card -->
+                <div id="welcome-card" class="bg-gradient-to-br from-slate-800 to-slate-800/80 border border-slate-700 rounded-2xl p-5 md:p-6 shadow-lg max-w-3xl mx-auto">
+                    <div class="flex items-start space-x-4">
+                        <div id="tutor-avatar" class="bg-emerald-500 text-slate-950 p-3 rounded-2xl text-2xl font-bold shadow-md flex items-center justify-center w-12 h-12 shrink-0">
+                            🤖
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <h3 id="tutor-title" class="text-base font-bold text-emerald-400">
+                                    Elementary Math Buddy AI
+                                </h3>
+                                <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-mono">Ready to Help</span>
+                            </div>
+                            <p id="tutor-description" class="text-sm text-slate-300 leading-relaxed mb-4">
+                                Hi there! I'm your interactive AI tutor tailored for **Elementary Math**. I use fun, simple explanations with visual examples and easy step-by-step guidance.
+                            </p>
+                            
+                            <!-- Prompt Suggestions Box -->
+                            <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3.5">
+                                <p class="text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Click a quick prompt to start:
+                                </p>
+                                <div id="suggestion-chips" class="flex flex-wrap gap-2">
+                                    <!-- Dynamic Chips inserted via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Stream Here -->
+            </div>
+
+            <!-- Input Bar -->
+            <div class="p-3 md:p-4 bg-slate-800/90 border-t border-slate-700 backdrop-blur-md">
+                <form id="chat-form" onsubmit="handleSend(event)" class="max-w-4xl mx-auto flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <input 
+                            type="text" 
+                            id="user-input" 
+                            placeholder="Ask a question or topic (e.g. 'Explain fractions with pizza slices')..." 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-inner"
+                            required
+                        />
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold px-5 py-3 rounded-xl text-sm transition shadow-md flex items-center gap-2 shrink-0"
+                    >
+                        <span class="hidden sm:inline">Ask AI</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+                <div class="text-[11px] text-center text-slate-500 mt-2">
+                    Tip: Switch Grade Levels anytime on the left menu for customized explanation depth!
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- API Settings Modal -->
+    <div id="api-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="toggleSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="bg-amber-500/20 text-amber-400 p-3 rounded-xl">
+                    <i class="fa-solid fa-key text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Google Gemini API Settings</h3>
+                    <p class="text-xs text-slate-400">Connect your Gemini API Key for dynamic live AI</p>
+                </div>
+            </div>
+            
+            <p class="text-xs text-slate-300 mb-4 leading-relaxed bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                Without an API key, EduPulse runs in <strong>Interactive Demo Mode</strong> with pre-configured grade-tailored study guides. Add a free API key from Google AI Studio to chat infinitely!
+            </p>
+
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Gemini API Key</label>
+            <input 
+                type="password" 
+                id="api-key-input" 
+                placeholder="Paste AIzaSy... here" 
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-5"
+            />
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="toggleSettingsModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-slate-200">Close</button>
+                <button onclick="saveApiKey()" class="px-4 py-2 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold shadow">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // App State
+        let currentGrade = 'elementary'; // 'elementary', 'middle', 'high'
+        let currentSubject = 'math';      // 'math', 'reading', 'social', 'science'
+        let currentGoal = 'explain';     // 'explain', 'quiz', 'summary', 'story'
+        let apiKey = localStorage.getItem('gemini_api_key') || '';
+
+        // Preset prompts categorized by [Grade][Subject]
+        const promptDatabase = {
+            elementary: {
+                math: [
+                    "How do fractions work using pizza slices?",
+                    "What is perimeter vs area with drawing shapes?",
+                    "Teach me basic multiplication using array patterns",
+                    "How do I add money and coins easily?"
+                ],
+                reading: [
+                    "What is the difference between Simile and Metaphor?",
+                    "How do I find the Main Idea in a short story?",
+                    "Explain context clues like a story detective",
+                    "What is theme in a children's story?"
+                ],
+                social: [
+                    "Why do we have rules and laws in a community?",
+                    "What are the 7 continents and 5 oceans?",
+                    "Who was Abraham Lincoln and why is he famous?",
+                    "What is the difference between goods and services?"
+                ],
+                science: [
+                    "How does the Water Cycle work (Evaporation & Rain)?",
+                    "Why do plants need photosynthesis and sunlight?",
+                    "What are the 3 states of matter (Solid, Liquid, Gas)?",
+                    "How do magnetic poles push and pull?"
+                ]
+            },
+            middle: {
+                math: [
+                    "How to solve 2-step algebraic equations with negatives?",
+                    "Explain the Pythagorean Theorem (a² + b² = c²)",
+                    "How do ratios, proportions, and percentages work?",
+                    "What is slope-intercept form (y = mx + b)?"
+                ],
+                reading: [
+                    "How to identify character motivations and plot arcs?",
+                    "Explain 1st, 2nd, and 3rd Person Point of View",
+                    "What is the difference between Active and Passive Voice?",
+                    "How to write a strong topic sentence for an essay"
+                ],
+                social: [
+                    "What were the primary causes of the American Revolution?",
+                    "How do the 3 branches of US Government check each other?",
+                    "What was the Silk Road and how did it affect global trade?",
+                    "Explain latitude, longitude, and map projections"
+                ],
+                science: [
+                    "What is cell structure (Nucleus, Mitochondria, Membrane)?",
+                    "Explain Newton's Three Laws of Motion with real examples",
+                    "How does the Periodic Table organize chemical elements?",
+                    "What causes plate tectonics and earthquakes?"
+                ]
+            },
+            high: {
+                math: [
+                    "Explain the concept of derivatives in calculus intuitively",
+                    "How do I solve quadratic equations by completing the square?",
+                    "Explain trigonometric identities and the unit circle",
+                    "How to calculate combinations vs permutations in probability"
+                ],
+                reading: [
+                    "How to construct a compelling thesis statement for an AP essay",
+                    "Analyze rhetorical appeals: Ethos, Pathos, and Logos",
+                    "Explain literary symbolism and dramatic irony in classic works",
+                    "How to synthesize secondary sources into a research paper"
+                ],
+                social: [
+                    "Analyze the main geopolitical causes of World War I",
+                    "Compare Capitalism, Socialism, and Mixed Economic Systems",
+                    "Explain landmark Supreme Court cases (e.g. Marbury v. Madison)",
+                    "How did the Industrial Revolution reshape global labor and urban society?"
+                ],
+                science: [
+                    "Explain DNA replication and protein synthesis step-by-step",
+                    "How do stoichiometry and mole calculations work in chemistry?",
+                    "Explain conservation of momentum and energy in physics",
+                    "What is thermodynamics and entropy?"
+                ]
+            }
+        };
+
+        const gradeConfig = {
+            elementary: {
+                title: "🎒 Elementary School Assistant (K-5)",
+                pillText: "🎒 Elementary Mode",
+                pillClass: "bg-emerald-500 text-slate-950 font-bold",
+                avatar: "🤖",
+                avatarClass: "bg-emerald-500 text-slate-950",
+                tone: "fun, encouraging, simple, step-by-step with analogies like toy blocks, pizza, and animals",
+                titleColor: "text-emerald-400"
+            },
+            middle: {
+                title: "🏫 Middle School Assistant (6-8)",
+                pillText: "🏫 Middle School Mode",
+                pillClass: "bg-indigo-500 text-white font-bold",
+                avatar: "🧠",
+                avatarClass: "bg-indigo-600 text-white",
+                tone: "clear, structured, engaging, with real-life scenarios, practical steps, and clear vocabulary",
+                titleColor: "text-indigo-400"
+            },
+            high: {
+                title: "🎓 High School Assistant (9-12 / AP)",
+                pillText: "🎓 High School Mode",
+                pillClass: "bg-rose-500 text-white font-bold",
+                avatar: "🎓",
+                avatarClass: "bg-rose-600 text-white",
+                tone: "academic, precise, deep, analytical, suitable for honors/AP level preparation and exam mastery",
+                titleColor: "text-rose-400"
+            }
+        };
+
+        const subjectNames = {
+            math: "Math",
+            reading: "Reading & ELA",
+            social: "Social Studies",
+            science: "Science"
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            if(apiKey) {
+                document.getElementById('api-key-input').value = apiKey;
+            }
+        });
+
+        function selectGrade(grade) {
+            currentGrade = grade;
+            
+            // Update grade buttons CSS
+            document.querySelectorAll('.grade-btn').forEach(btn => {
+                btn.className = "grade-btn text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-slate-700 text-slate-300 hover:border-slate-600";
+                const check = btn.querySelector('.fa-check');
+                if(check) check.classList.add('opacity-0');
+            });
+
+            const activeBtn = document.getElementById(`grade-btn-${grade}`);
+            if(activeBtn) {
+                if(grade === 'elementary') activeBtn.className = "grade-btn active text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-emerald-500/50 bg-emerald-950/40 text-emerald-300";
+                if(grade === 'middle') activeBtn.className = "grade-btn active text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-indigo-500/50 bg-indigo-950/40 text-indigo-300";
+                if(grade === 'high') activeBtn.className = "grade-btn active text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between font-medium text-sm border border-rose-500/50 bg-rose-950/40 text-rose-300";
+                
+                const check = activeBtn.querySelector('.fa-check');
+                if(check) check.classList.remove('opacity-0');
+            }
+
+            // Mobile button update
+            document.querySelectorAll('.m-grade-btn').forEach(btn => {
+                btn.className = "m-grade-btn px-2.5 py-1.5 bg-slate-700 text-slate-300 rounded-lg font-medium whitespace-nowrap";
+            });
+            const mBtn = document.getElementById(`m-grade-${grade}`);
+            if(mBtn) {
+                if(grade==='elementary') mBtn.className = "m-grade-btn px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg font-medium whitespace-nowrap";
+                if(grade==='middle') mBtn.className = "m-grade-btn px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg font-medium whitespace-nowrap";
+                if(grade==='high') mBtn.className = "m-grade-btn px-2.5 py-1.5 bg-rose-600 text-white rounded-lg font-medium whitespace-nowrap";
+            }
+
+            updateUI();
+        }
+
+        function selectSubject(sub) {
+            currentSubject = sub;
+            document.querySelectorAll('.subject-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'bg-emerald-600', 'bg-rose-600', 'text-white');
+                btn.classList.add('text-slate-300', 'hover:bg-slate-700/60');
+            });
+
+            const activeBtn = document.getElementById(`btn-${sub}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-700/60');
+                let subBg = 'bg-indigo-600';
+                if(currentGrade === 'elementary') subBg = 'bg-emerald-600';
+                if(currentGrade === 'high') subBg = 'bg-rose-600';
+                activeBtn.classList.add(subBg, 'text-white');
+            }
+
+            // Mobile sub btn
+            document.querySelectorAll('.m-sub-btn').forEach(btn => {
+                btn.className = "m-sub-btn px-2.5 py-1 bg-slate-700 text-slate-300 rounded-md font-medium whitespace-nowrap";
+            });
+            const mSubBtn = document.getElementById(`m-btn-${sub}`);
+            if(mSubBtn) mSubBtn.className = "m-sub-btn px-2.5 py-1 bg-indigo-600 text-white rounded-md font-medium whitespace-nowrap";
+
+            updateUI();
+        }
+
+        function setGoal(goal) {
+            currentGoal = goal;
+            document.querySelectorAll('.goal-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500/50', 'bg-indigo-950/40', 'text-indigo-300');
+                btn.classList.add('border-slate-700', 'text-slate-400');
+            });
+            const selectedGoal = document.getElementById(`goal-${goal}`);
+            if (selectedGoal) {
+                selectedGoal.classList.remove('border-slate-700', 'text-slate-400');
+                selectedGoal.classList.add('border-indigo-500/50', 'bg-indigo-950/40', 'text-indigo-300');
+            }
+            updatePersonaText();
+        }
+
+        function updateUI() {
+            const config = gradeConfig[currentGrade];
+            
+            // Header Badge
+            const pill = document.getElementById('grade-pill');
+            pill.className = `text-xs px-2.5 py-0.5 rounded-full ${config.pillClass} shadow`;
+            pill.innerText = config.pillText;
+
+            // Welcome Card Avatar & Title
+            const avatar = document.getElementById('tutor-avatar');
+            avatar.className = `p-3 rounded-2xl text-2xl font-bold shadow-md flex items-center justify-center w-12 h-12 shrink-0 ${config.avatarClass}`;
+            avatar.innerText = config.avatar;
+
+            const title = document.getElementById('tutor-title');
+            title.className = `text-base font-bold ${config.titleColor}`;
+            title.innerText = `${config.pillText.replace('Mode','')} - ${subjectNames[currentSubject]} Assistant`;
+
+            const desc = document.getElementById('tutor-description');
+            desc.innerHTML = `Welcome! I am specialized in <strong>${currentGrade.toUpperCase()} level ${subjectNames[currentSubject]}</strong>. I use ${config.tone} to build confidence and complete understanding.`;
+
+            updatePersonaText();
+            updateSuggestions();
+        }
+
+        function updatePersonaText() {
+            const gradeName = currentGrade.charAt(0).toUpperCase() + currentGrade.slice(1);
+            const subName = subjectNames[currentSubject];
+            document.getElementById('active-persona-text').innerText = `${gradeName} ${subName} (${currentGoal})`;
+        }
+
+        function updateSuggestions() {
+            const container = document.getElementById('suggestion-chips');
+            container.innerHTML = '';
+            
+            const list = (promptDatabase[currentGrade] && promptDatabase[currentGrade][currentSubject]) 
+                ? promptDatabase[currentGrade][currentSubject] 
+                : ["Explain key concepts", "Give me a practice question"];
+
+            list.forEach(text => {
+                const btn = document.createElement('button');
+                btn.className = "text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-indigo-200 px-3 py-1.5 rounded-lg border border-slate-700 transition text-left";
+                btn.innerText = text;
+                btn.onclick = () => {
+                    document.getElementById('user-input').value = text;
+                    handleSend(new Event('submit'));
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleSettingsModal() {
+            const modal = document.getElementById('api-modal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            localStorage.setItem('gemini_api_key', key);
+            apiKey = key;
+            toggleSettingsModal();
+            alert(key ? "API Key saved successfully! Live Gemini responses enabled." : "Key cleared. Running in Demo Mode.");
+        }
+
+        function appendMessage(sender, text) {
+            const chatContainer = document.getElementById('chat-container');
+            const isUser = sender === 'user';
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+
+            const config = gradeConfig[currentGrade];
+            const iconHtml = isUser 
+                ? `<div class="bg-slate-700 p-2.5 rounded-2xl text-slate-300 text-sm"><i class="fa-solid fa-user"></i></div>`
+                : `<div class="${config.avatarClass} p-2.5 rounded-2xl text-sm font-bold flex items-center justify-center w-9 h-9 shrink-0">${config.avatar}</div>`;
+
+            const bgStyle = isUser ? 'bg-indigo-600 text-white' : 'bg-slate-800 border border-slate-700 text-slate-200';
+
+            msgDiv.innerHTML = `
+                ${iconHtml}
+                <div class="${bgStyle} rounded-2xl p-4 max-w-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-md">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function handleSend(e) {
+            e.preventDefault();
+            const inputField = document.getElementById('user-input');
+            const message = inputField.value.trim();
+            if(!message) return;
+
+            // Hide welcome card after first message
+            const welcomeCard = document.getElementById('welcome-card');
+            if(welcomeCard) welcomeCard.style.display = 'none';
+
+            appendMessage('user', message);
+            inputField.value = '';
+
+            // Loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = "loading-indicator";
+            loadingDiv.className = "flex items-center space-x-2 text-slate-400 text-xs pl-12 py-2";
+            loadingDiv.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-indigo-400"></i><span>EduPulse Tutor is drafting explanation...</span>`;
+            document.getElementById('chat-container').appendChild(loadingDiv);
+
+            if(apiKey) {
+                await fetchAIResponse(message);
+            } else {
+                setTimeout(() => {
+                    removeLoading();
+                    appendMessage('ai', getDemoResponse(message));
+                }, 750);
+            }
+        }
+
+        function removeLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.remove();
+        }
+
+        async function fetchAIResponse(userPrompt) {
+            const config = gradeConfig[currentGrade];
+            const systemPrompt = `You are EduPulse AI, an expert tutor for ${currentGrade.toUpperCase()} grade level in ${subjectNames[currentSubject]}. 
+Goal Mode: ${currentGoal}. Tone and Style: ${config.tone}. 
+Provide clear, accurate, visually structured explanations with emojis, key points, bullet points, and step-by-step guidance suitable for a student in this age bracket.`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: `${systemPrompt}
+
+Student Query: "${userPrompt}"` }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                removeLoading();
+
+                if(data.candidates && data.candidates[0].content.parts[0].text) {
+                    appendMessage('ai', data.candidates[0].content.parts[0].text);
+                } else {
+                    appendMessage('ai', "⚠️ API Error: Unable to fetch response. Please verify your Gemini API key in Settings.");
+                }
+            } catch (err) {
+                removeLoading();
+                appendMessage('ai', "⚠️ Network error occurred while connecting to AI. Please check your internet connection or API Key.");
+            }
+        }
+
+        function getDemoResponse(prompt) {
+            const sub = subjectNames[currentSubject];
+            const gradeName = currentGrade.toUpperCase();
+            
+            if (currentGrade === 'elementary') {
+                return `🌟 [${gradeName} ${sub} breakdown]
+
+Great question! Let's explore "${prompt}" in a fun way! 🎈
+
+1️⃣ **The Big Picture**: Imagine you have a box of building blocks...
+2️⃣ **Step-by-Step**: First, count what you have. Next, group them into equal piles.
+3️⃣ **Fun Rule**: Practice this 2 minutes every day and you'll be a pro!
+
+💡 *Tip: Add your free Gemini API key in settings for unlimited custom AI answers!*`;
+            } else if (currentGrade === 'middle') {
+                return `📚 [${gradeName} ${sub} Study Guide]
+
+Here is how to master "${prompt}":
+
+• **Core Concept**: Understanding the key rule and how it applies in practice.
+• **Worked Example**: Break down the problem into 3 logical steps.
+• **Common Pitfall**: Watch out for negative signs or misreading the problem statement!
+
+✏️ **Try this**: Write down 2 examples on index cards to test yourself.`;
+            } else {
+                return `🎓 [${gradeName} ${sub} Academic Analysis]
+
+Analysis of "${prompt}":
+
+1. **Theoretical Framework**: Primary principles and definitions.
+2. **Critical Application**: Methodological resolution and key formulas/theses.
+3. **Synthesis**: Connecting this concept to broader curricular topics (AP/Exam prep standard).
+
+💡 *Connect your Gemini API Key in the top right to generate tailored practice problems!*`;
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
